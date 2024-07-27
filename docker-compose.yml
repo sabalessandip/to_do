@@ -4,8 +4,6 @@ services:
     container_name: database
     build:
       context: ./database
-    ports:
-      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: "root@123"
     healthcheck:

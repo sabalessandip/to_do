@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
-@CrossOrigin
 public class TaskController {
     @Autowired
     TaskService service;

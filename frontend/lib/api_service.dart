@@ -4,8 +4,8 @@ import 'task.dart';
 import 'task_detail.dart';
 
 class ApiService {
-  // static const String baseUrl = 'http://localhost:5000';
-  static const String baseUrl = 'http://backend:5000';
+  static const String baseUrl = 'http://localhost:5000';
+  // static const String baseUrl = 'http://backend:5000';
 
   Future<List<Task>> getTasks() async {
     final response = await http.get(Uri.parse('$baseUrl/tasks'));
