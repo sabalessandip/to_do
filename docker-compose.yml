@@ -17,8 +17,6 @@ services:
     container_name: backend
     build:
       context: ./backend
-    ports:
-      - "5000:5000"
     environment:
       SPRING_DATASOURCE_URL: "jdbc:mysql://database:3306/todo_list"
       SPRING_DATASOURCE_USERNAME: "todo_user"
@@ -27,11 +25,20 @@ services:
       database:
         condition: service_healthy
 
+  apigateway:
+    container_name: apigateway
+    build:
+      context: ./gateway
+    ports:
+      - 82:80
+    depends_on:
+      - backend
+
   frontend:
     container_name: frontend
     build:
       context: ./frontend
     ports:
-      - 80:80
+      - 81:80
     depends_on:
-      - backend
+      - apigateway
