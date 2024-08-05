@@ -1,11 +1,14 @@
 # Set base image
 FROM nginx:alpine
 
-# Copy the NGINX configuration file
-COPY nginx.conf /etc/nginx/nginx.conf
+# Copy nginx template configuration file
+COPY nginx.template.conf /etc/nginx/nginx.template.conf
 
-# Expose port 80
-EXPOSE 80
+# Copy the start script
+COPY start.sh /start.sh
 
-# Start NGINX when the container has started
-CMD ["nginx", "-g", "daemon off;"]
+# Ensure the start script is executable
+RUN chmod +x /start.sh
+
+# Set the entrypoint to the start script
+ENTRYPOINT ["/start.sh"]
