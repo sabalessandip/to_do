@@ -19,7 +19,7 @@ class ApiService {
 
   Future<Task> createTask(TaskDetail task) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/task'),
+      Uri.parse('$baseUrl/tasks'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(task.toJson()),
     );
@@ -33,7 +33,7 @@ class ApiService {
 
   Future<Task> updateTask(Task task) async {
     final response = await http.put(
-      Uri.parse('$baseUrl/task/${task.id}'),
+      Uri.parse('$baseUrl/tasks/${task.id}'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(task.toJson()),
     );
@@ -45,7 +45,7 @@ class ApiService {
   }
 
   Future<void> deleteTask(int id) async {
-    final response = await http.delete(Uri.parse('$baseUrl/task/$id'));
+    final response = await http.delete(Uri.parse('$baseUrl/tasks/$id'));
     if (response.statusCode != 200) {
       throw Exception('Failed to delete task');
     }
