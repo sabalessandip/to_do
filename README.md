@@ -137,7 +137,7 @@ aws cloudformation create-stack \
 **Access the Application**
 <br>
 <br>
-The application will be accessible at http://<frontend-alb-dns-name>.
+The application will be accessible at http://[frontend-alb-dns-name].
 
 **Clean the Deployment**
 <br>
@@ -383,7 +383,7 @@ kubectl describe ingress frontend-ingress
 <br>
 Launch the browser in disabled web security mode and Test the application.
 
-The application will be accessible at http://<frontend-ingress-dns>.
+The application will be accessible at http://[frontend-ingress-dns].
 
 **Clean the Deployment**
 <br>
