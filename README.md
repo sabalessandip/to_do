@@ -18,12 +18,14 @@ cd to_do
 ## Deployment Using Docker Compose
 
 **1. Update API Path**
+
 Modify the ```baseUrl``` in ```api_service.dart``` within the frontend to point to the Docker Compose environment.
 ```Dart
 static const String baseUrl = 'http://localhost:82';
 ```
 
 **2. Package the Application**
+
 Navigate to the cloned folder and run the following command to package the frontend and backend
 ```sh
 sh build_all.sh
@@ -35,6 +37,7 @@ docker-compose up -d
 ```
 
 **4. Access the Application**
+
 Launch your browser in disabled web security mode to prevent CORS errors. On Mac, use the following command for chrome:
 ```sh
 open -na Google\ Chrome --args --user-data-dir=<path> --disable-web-security
