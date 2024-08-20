@@ -65,6 +65,7 @@ aws cloudformation create-stack \
 ```
 
 **2. Create Security Groups**
+<br>
 Refer to the ```VPCId``` output from the ```three-tier-app-vpc``` stack.
 
 ```sh
@@ -75,6 +76,7 @@ aws cloudformation create-stack \
 ```
 
 **3. Create Load Balancers**
+<br>
 Refer to the outputs of ```three-tier-app-vpc``` and ```three-tier-app-sec-groups``` stacks to populate the parameters in ```alb-parameters.json```.
 
 ```sh
@@ -85,6 +87,7 @@ aws cloudformation create-stack \
 ```
 
 **4. Update API Path**
+<br>
 Modify the ```baseUrl``` in ```api_service.dart``` in the frontend with the Gateway ALB’s DNS name.
 
 ```dart
@@ -92,12 +95,14 @@ static const String baseUrl = 'http://<gateway-alb-dns-name>';
 ```
 
 **5. Package the Application**
+<br>
 Navigate to the cloned folder and run the following command to package the frontend and backend
 ```sh
 sh build_all.sh
 ```
 
 **6. Create ECR Repositories and Task Definitions**
+<br>
 Refer to the outputs of ```three-tier-app-vpc```, ```three-tier-app-albs```, and ```three-tier-app-sec-groups``` stacks to populate the parameters in ```taskdef-parameters.json```.
 
 ```sh
@@ -110,6 +115,7 @@ aws cloudformation create-stack \
 Push the Docker images for the database, backend, gateway, and frontend from their respective folders using the commands provided in each ECR repository.
 
 **7. Create Cluster and Services**
+<br>
 Initially, the services are created with zero deployments. Once the stack is successfully created, update the services with the desired count.
 
 ```sh
@@ -120,9 +126,11 @@ aws cloudformation create-stack \
 ```
 
 **Access the Application**
+<br>
 The application will be accessible at http://<frontend-alb-dns-name>.
 
 **Clean the Deployment**
+<br>
 Delete the CloudFormation stacks to remove the AWS resources.
 
 ## Deployment Using Minikube
@@ -145,21 +153,25 @@ minikube dashboard
 ```
 
 **4. Connect Docker Client to Minikube**
+<br>
 Run the following command to connect the local Docker client to the Minikube Docker client, allowing you to build images locally without pushing them to a public repository. Note that this connection is specific to a terminal session.
 ```sh
 eval $(minikube docker-env)
 ```
 
 **5. Update API Path**
+<br>
 Uncomment the ```baseUrl``` in ```api_service.dart``` from the frontend with the minikube Gateway URL.
 
 **6. Package the Application**
+<br>
 Run the following command to package the frontend and backend
 ```sh
 sh build_all.sh
 ```
 
 **7. Build docker images**
+<br>
 Run the following command to build the docker images for database, backend, gateway and frontend
 ```sh
 sh build_all_images.sh
@@ -225,15 +237,18 @@ Add the following line
 ```
 
 **17. Run Minikube Tunnel**
+<br>
 In a separate terminal session, run:
 ```sh
 minikube tunnel
 ```
 
 **Access the Application**
+<br>
 The application will be accessible at http://three-tier-app.local.
 
 **Clean the Deployment**
+<br>
 Run the following command to clean up the Minikube cluster
 ```sh
 minikube delete --all
@@ -250,6 +265,7 @@ eksctl create cluster \
 ```
 
 **2. Create EC2 Node Group**
+<br>
 To accommodate add-ons like CoreDNS that require EC2 instances
 ```sh
 eksctl create nodegroup \
@@ -264,6 +280,7 @@ eksctl create nodegroup \
 ```
 
 **3. Configure kubectl**
+<br>
 Configure kubectl to connect to the newly created cluster
 ```sh
 aws eks --region ap-south-1 update-kubeconfig \
@@ -273,6 +290,7 @@ aws eks --region ap-south-1 update-kubeconfig \
 Navigate to ```aws-k8s``` folder,
 
 **4. Install AWS Load Balancer Controller**
+<br>
 Follow the AWS guide to set up the AWS Load Balancer Controller, which is required for ALB ingress resources for the gateway and frontend.
 
 (AWS Load Balancer Controller Guide)[https://repost.aws/knowledge-center/eks-alb-ingress-controller-fargate]
@@ -312,6 +330,7 @@ aws ecr create-repository \
 **6. Build and push the docker images for gateway, backend and database from respective folders using push command specified in ECR repositories ```View push commands``` section.**
 
 **7. Deploy the Application**
+<br>
 Apply the manifest files to create the database, backend, and gateway deployments, following the steps from 8 to 14 as in the Minikube deployment above.
 
 **8. Retrieve Gateway Ingress DNS**
@@ -320,12 +339,14 @@ kubectl describe ingress gateway-ingress
 ```
 
 **9. Update Frontend API Path**
+<br>
 Modify the ```baseUrl``` in ```api_service.dart``` in the frontend with the Gateway ingress DNS name
 ```dart
 static const String baseUrl = 'http://<gateway-ingress-dns>';
 ```
 
 **10. Deploy Frontend**
+<br>
 Create and push the frontend image to the ECR repository, then apply the frontend manifests as shown following the step 15 from the Minikube deployment above.
 
 **11. Retrieve Frontend Ingress DNS**
@@ -334,9 +355,11 @@ kubectl describe ingress frontend-ingress
 ```
 
 **Access the Application**
+<br>
 Launch the browser in disabled web security mode and Test the application.
 
 The application will be accessible at http://<frontend-ingress-dns>.
 
 **Clean the Deployment**
+<br>
 Delete the CloudFormation stacks to remove the AWS resources.
