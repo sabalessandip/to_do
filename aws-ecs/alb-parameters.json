@@ -1,0 +1,18 @@
+[
+    {
+        "ParameterKey": "VPCId",
+        "ParameterValue": "<vpcid>"
+    },
+    {
+        "ParameterKey": "SubnetIds",
+        "ParameterValue": "<id>, <id>"
+    },
+    {
+        "ParameterKey": "FrontendALBSecGrpId",
+        "ParameterValue": "<id>"
+    },
+    {
+        "ParameterKey": "GatewayALBSecGrpId",
+        "ParameterValue": "<id>"
+    }
+]

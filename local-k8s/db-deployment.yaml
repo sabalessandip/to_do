@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-deployment
+  namespace: three-tier-app
+  labels:
+    app: three-tier-app-db
+spec:
+  selector:
+    matchLabels:
+      app: three-tier-app-db
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: three-tier-app-db
+    spec:
+      containers:
+        - name: three-tier-app-database
+          image: to-do-db:latest
+          imagePullPolicy: Never
+          # resources:
+          #   requests:
+          #     cpu: 250m
+          #     memory: 1024Mi
+          #   limits:
+          #     cpu: 250m
+          #     memory: 1024Mi
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "mysqladmin ping -h localhost || exit 1"
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "mysqladmin ping -h localhost || exit 1"
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: three-tier-app-secretes
+                  key: db-root-password
+          ports:
+            - containerPort: 3306
+              name: db-port
+      restartPolicy: Always

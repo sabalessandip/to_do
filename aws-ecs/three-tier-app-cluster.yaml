@@ -1,0 +1,154 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This template creates the ECS cluster and respective services for three tier app.
+
+Parameters:
+  VPCId:
+    Type: AWS::EC2::VPC::Id
+    Description: The resource Id of three tier app vpc.
+  DefaultSecGrpId:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: VPC's default security group Id.
+  FrontendSecGrpId:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: The ID of the security group created for frontend instances.
+  GatewaySecGrpId:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: The ID of the security group created for gateway instances.
+  BackendSecGrpId:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: The ID of the security group created for backend instances.
+  PublicSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: The list of public subnets to associate to above mentioned vpc.
+  PrivateSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: The list of private subnets to associate to above mentioned vpc.
+  FrontendTG:
+    Type: String
+    Description: Frontend application target group ARN.
+  GatewayTG:
+    Type: String
+    Description: Gateway application target group ARN.
+  DesiredCount:
+    Type: Number
+    Description: The desired number of task instances in each service.
+    Default: 0
+  FrontendTaskDefinition:
+    Type: String
+    Description: The ARN of the Frontend ECS Task Definition.
+  GatewayTaskDefinition:
+    Type: String
+    Description: The ARN of the Frontend ECS Task Definition.
+  APITaskDefinition:
+    Type: String
+    Description: The ARN of the Frontend ECS Task Definition.
+
+Mappings:
+  Project:
+    Name:
+      Value: "three-tier-app"
+
+Resources:
+  # Create ECS cluster
+  ThreeTierAppCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Join ["-", [!FindInMap [Project, Name, Value], "cluster"]]
+  
+  # Create service connect namespace for services to connect with each other
+  ThreeTierAppNamespace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties:
+      Name: !Join ["-", [!FindInMap [Project, Name, Value], "namespace"]]
+      Vpc: !Ref VPCId
+      Description: "Private DNS namespace for Service Connect in ECS"
+    
+  # Create service for three tier app API (backend and database combined)
+  APIService:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: "api-service"
+      Cluster: !Ref ThreeTierAppCluster
+      TaskDefinition: !Ref APITaskDefinition
+      DesiredCount: !Ref DesiredCount
+      LaunchType: FARGATE
+      SchedulingStrategy: REPLICA
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !Ref DefaultSecGrpId
+            - !Ref BackendSecGrpId
+          Subnets: !Ref PrivateSubnetIds
+      ServiceConnectConfiguration:
+        Enabled: true
+        Namespace: !GetAtt ThreeTierAppNamespace.Arn
+        Services:
+          - PortName: "backend-port"
+            ClientAliases:
+              - Port: 5000
+                DnsName: "backend"
+      Tags:
+        - Key: Project
+          Value: !FindInMap [Project, Name, Value]
+  
+  # Create service for three tier app gateway
+  GatewayService:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: "gateway-service"
+      Cluster: !Ref ThreeTierAppCluster
+      TaskDefinition: !Ref GatewayTaskDefinition
+      DesiredCount: !Ref DesiredCount
+      LaunchType: FARGATE
+      SchedulingStrategy: REPLICA
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref DefaultSecGrpId
+            - !Ref GatewaySecGrpId
+          Subnets: !Ref PublicSubnetIds
+      LoadBalancers:
+        - ContainerName: "three-tier-gateway"
+          ContainerPort: 80
+          TargetGroupArn: !Ref GatewayTG
+      HealthCheckGracePeriodSeconds: 60
+      ServiceConnectConfiguration:
+        Enabled: true
+        Namespace: !GetAtt ThreeTierAppNamespace.Arn
+      Tags:
+        - Key: Project
+          Value: !FindInMap [Project, Name, Value]
+  
+  # Create service for three tier app frontend
+  FrontendService:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: "frontend-service"
+      Cluster: !Ref ThreeTierAppCluster
+      TaskDefinition: !Ref FrontendTaskDefinition
+      DesiredCount: !Ref DesiredCount
+      LaunchType: FARGATE
+      SchedulingStrategy: REPLICA
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref DefaultSecGrpId
+            - !Ref FrontendSecGrpId
+          Subnets: !Ref PublicSubnetIds
+      LoadBalancers:
+        - ContainerName: "three-tier-frontend"
+          ContainerPort: 80
+          TargetGroupArn: !Ref FrontendTG
+      HealthCheckGracePeriodSeconds: 60
+      Tags:
+        - Key: Project
+          Value: !FindInMap [Project, Name, Value]
+
+Outputs:
+  ECSClusterName:
+    Description: "The name of the ECS Cluster"
+    Value: !Ref ThreeTierAppCluster
+

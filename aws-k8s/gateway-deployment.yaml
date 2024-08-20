@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-deployment
+  namespace: three-tier-app
+  labels:
+    app: three-tier-app-gw
+spec:
+  selector:
+    matchLabels:
+      app: three-tier-app-gw
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: three-tier-app-gw
+    spec:
+      containers:
+      - name: three-tier-app-gateway
+        image: <ECR-IMAGE-URI>
+        resources:
+            requests:
+              cpu: 500m
+              memory: 1024Mi
+            limits:
+              cpu: 1000m
+              memory: 2048Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 120
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        env:
+        - name: BACKEND_URL
+          valueFrom:
+            configMapKeyRef:
+              name: three-tier-app-map
+              key: backend-url
+        - name: BASIC_AUTH_CREDENTIALS
+          valueFrom:
+            secretKeyRef:
+              name: three-tier-app-secretes
+              key: backend-auth-creds
+        ports:
+        - containerPort: 80
+          name:  gateway-port
+      restartPolicy: Always

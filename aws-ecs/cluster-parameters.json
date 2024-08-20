@@ -1,0 +1,54 @@
+[
+    { 
+        "ParameterKey": "VPCId",
+        "ParameterValue": "<vpcid>"
+    },
+    { 
+        "ParameterKey": "DefaultSecGrpId",
+        "ParameterValue": "<id>" 
+    },
+    { 
+        "ParameterKey": "FrontendSecGrpId",
+        "ParameterValue": "<id>"
+    },
+    { 
+        "ParameterKey": "GatewaySecGrpId",
+        "ParameterValue":"<id>"
+    },
+    { 
+        "ParameterKey": "BackendSecGrpId",
+        "ParameterValue":"<id>"
+    },
+    { 
+        "ParameterKey": "PublicSubnetIds",
+        "ParameterValue": "<id> ,<id>" 
+    },
+    { 
+        "ParameterKey": "PrivateSubnetIds",
+        "ParameterValue":"<id> ,<id>" 
+    },
+    { 
+        "ParameterKey": "FrontendTG",
+        "ParameterValue": "<arn>" 
+    },
+    { 
+        "ParameterKey": "GatewayTG",
+        "ParameterValue": "<arn>" 
+    },
+    { 
+        "ParameterKey": "DesiredCount",
+        "ParameterValue": "0" 
+    },
+    { 
+        "ParameterKey": "FrontendTaskDefinition",
+        "ParameterValue":"<arn>" 
+    },
+    { 
+        "ParameterKey": "GatewayTaskDefinition",
+        "ParameterValue":"<arn>" 
+    },
+    { 
+        "ParameterKey": "APITaskDefinition",
+        "ParameterValue":"<arn>" 
+    }
+]

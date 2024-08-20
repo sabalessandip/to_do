@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  namespace: three-tier-app
+  labels:
+    app: three-tier-app-fr
+spec:
+  selector:
+    matchLabels:
+      app: three-tier-app-fr
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: three-tier-app-fr
+    spec:
+      containers:
+      - name: three-tier-app-frontend
+        image: <ECR-IMAGE-URI>
+        resources:
+            requests:
+              cpu: 500m
+              memory: 1024Mi
+            limits:
+              cpu: 1000m
+              memory: 2048Mi
+        ports:
+        - containerPort: 80
+          name:  frontend-port
+      restartPolicy: Always

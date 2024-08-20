@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-service
+  namespace: three-tier-app
+spec:
+  selector:
+    app: three-tier-app-db
+  type: ClusterIP
+  ports:
+  - name: db-service-port
+    protocol: TCP
+    port: 3306
+    targetPort: 3306

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: three-tier-app
+spec:
+  selector:
+    app: three-tier-app-bk
+  type: ClusterIP
+  ports:
+  - name: bk-service-port
+    protocol: TCP
+    port: 5000
+    targetPort: 5000

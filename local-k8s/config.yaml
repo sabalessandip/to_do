@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: three-tier-app-map
+  namespace: three-tier-app
+data:
+  # used in database container
+  db-user: todo_user
+  # used in backend container
+  db-url: jdbc:mysql://db-service:3306/todo_list
+  # used in gateway container
+  backend-url: backend-service:5000

@@ -1,0 +1,128 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This template creates the security groups for various resources in three tier app stack.
+
+Parameters:
+  VPCId:
+    Type: AWS::EC2::VPC::Id
+    Description: The resource Id of three tier app vpc.
+
+Mappings: 
+  Project:
+    Name:
+      Value: "three-tier-app"
+
+Resources:
+  # Create Security group for frontend's application load balancer
+  FrontendALB:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Join ["-", [!FindInMap [Project, Name, Value], "fr-alb-sg"]]
+      GroupDescription: This security group is for frontend application load balancer
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Project
+          Value: !FindInMap [Project, Name, Value]
+  
+  # Create Security group for frontend instances
+  Frontend:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Join ["-", [!FindInMap [Project, Name, Value], "fr-sg"]]
+      GroupDescription: This security group is for frontend
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref FrontendALB
+      Tags:
+        - Key: Project
+          Value: !FindInMap [Project, Name, Value]
+  
+  # Create Security group for gateway's application load balancer
+  GatewayALB:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Join ["-", [!FindInMap [Project, Name, Value], "gw-alb-sg"]]
+      GroupDescription: This security group is for gateway application load balancer
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Project
+          Value: !FindInMap [Project, Name, Value]
+  
+  # Create Security group for gateway instances
+  Gateway:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Join ["-", [!FindInMap [Project, Name, Value], "gw-sg"]]
+      GroupDescription: This security group is for gateway
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref GatewayALB
+      Tags:
+        - Key: Project
+          Value: !FindInMap [Project, Name, Value]
+
+  # Create Security group for backend instances
+  Backend:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Join ["-", [!FindInMap [Project, Name, Value], "bk-sg"]]
+      GroupDescription: This security group is for backend, whether its individual or backend, database combination
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5000
+          ToPort: 5000
+          SourceSecurityGroupId: !Ref Gateway
+      Tags:
+        - Key: Project
+          Value: !FindInMap [Project, Name, Value]
+
+  # Create Security group for database instances
+  Database:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Join ["-", [!FindInMap [Project, Name, Value], "db-sg"]]
+      GroupDescription: This security group is for database, unused as database is combined in backend
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !Ref Backend
+      Tags:
+        - Key: Project
+          Value: !FindInMap [Project, Name, Value]
+Outputs:
+  FrontendALBSecGrpId:
+    Description: Frontend load balancer security group
+    Value: !Ref FrontendALB
+  FrontendSecGrpId:
+    Description: Frontend security group
+    Value: !Ref Frontend
+  GatewayALBSecGrpId:
+    Description: Gateway load balancer security group
+    Value: !Ref GatewayALB
+  GatewaySecGrpId:
+    Description: Gateway security group
+    Value: !Ref Gateway
+  BackendSecGrpId:
+    Description: Backend security group
+    Value: !Ref Backend
+  DatabaseSecGrpId:
+    Description: Database security group
+    Value: !Ref Database

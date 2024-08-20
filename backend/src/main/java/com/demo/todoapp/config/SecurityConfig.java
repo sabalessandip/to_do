@@ -1,6 +1,7 @@
 package com.demo.todoapp.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -8,8 +9,17 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        // httpSecurity.authorizeHttpRequests(auth -> {
+        //     auth.requestMatchers("/health", "/info").permitAll()
+        //     .anyRequest().authenticated();
+        // });
+
+        // httpSecurity.httpBasic(Customizer.withDefaults());
+
+        // httpSecurity.csrf(Customizer.withDefaults());
+        
+        httpSecurity
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/health", "/info").permitAll()
                 .anyRequest().authenticated()
@@ -18,6 +28,6 @@ public class SecurityConfig {
             .and()
             .csrf().disable();
 
-        return http.build();
+        return httpSecurity.build();
     }
 }

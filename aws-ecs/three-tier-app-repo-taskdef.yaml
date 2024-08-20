@@ -1,0 +1,240 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This template creates the ECR repositories for database, backend, gateway and frontend. Its also creates the task definitions for frontend, gateway and backend (api and database combined)
+
+Mappings:
+  Project:
+    Name:
+      Value: "three-tier-app"
+
+Resources:
+  # Create repository for database docker images
+  DatabaseRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Join ["-", [!FindInMap [Project, Name, Value], "database"]]
+      ImageScanningConfiguration:
+        ScanOnPush: false
+      ImageTagMutability: MUTABLE
+      Tags:
+        - Key: Project
+          Value: !FindInMap [Project, Name, Value]
+  
+  # Create repository for backend docker images
+  BackendRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Join ["-", [!FindInMap [Project, Name, Value], "backend"]]
+      ImageScanningConfiguration:
+        ScanOnPush: false
+      ImageTagMutability: MUTABLE
+      Tags:
+        - Key: Project
+          Value: !FindInMap [Project, Name, Value]
+  
+  # Create repository for gateway docker images
+  GatewayRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Join ["-", [!FindInMap [Project, Name, Value], "gateway"]]
+      ImageScanningConfiguration:
+        ScanOnPush: false
+      ImageTagMutability: MUTABLE
+      Tags:
+        - Key: Project
+          Value: !FindInMap [Project, Name, Value]
+  
+  # Create repository for frontend docker images
+  FrontendRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Join ["-", [!FindInMap [Project, Name, Value], "frontend"]]
+      ImageScanningConfiguration:
+        ScanOnPush: false
+      ImageTagMutability: MUTABLE
+      Tags:
+        - Key: Project
+          Value: !FindInMap [Project, Name, Value]
+  
+  # Create IAM role for ECS three tier app tasks
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join ["-", [!FindInMap [Project, Name, Value], "taskExecutionRole"]]
+      AssumeRolePolicyDocument:
+        Version: '2008-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+      Tags:
+        - Key: Project
+          Value: !FindInMap [Project, Name, Value]
+  
+  # Create log group for cloud watch logs
+  ThreeTierAppLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /ecs/three-tier-app
+      RetentionInDays: 1
+
+  # Create task definition for three tier app apis (microservice and database combined)
+  APITaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Join ["-", [!FindInMap [Project, Name, Value], "api-taskdef"]]
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: "1 vCPU"
+      Memory: "2 GB"
+      TaskRoleArn: !Ref ECSTaskRole
+      ExecutionRoleArn: !Ref ECSTaskRole
+      RuntimePlatform:
+        CpuArchitecture: X86_64
+        OperatingSystemFamily: LINUX
+      ContainerDefinitions:
+        - Name: three-tier-database
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${DatabaseRepository}"
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref ThreeTierAppLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: api
+          HealthCheck:
+            Command: ["CMD-SHELL", "mysqladmin ping -h localhost || exit 1"]
+            Interval: 30
+            Timeout: 5
+            Retries: 3
+            StartPeriod: 30
+          Environment:
+            - Name: MYSQL_ROOT_PASSWORD
+              Value: root@123
+        - Name: three-tier-backend
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${BackendRepository}"
+          Essential: true
+          DependsOn:
+            - ContainerName: three-tier-database
+              Condition: HEALTHY
+          PortMappings:
+            - ContainerPort: 5000
+              HostPort: 5000
+              Protocol: tcp
+              Name: backend-port
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref ThreeTierAppLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: db
+          HealthCheck:
+            Command: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+            Interval: 30
+            Timeout: 5
+            Retries: 3
+            StartPeriod: 30
+          Environment:
+            - Name: SPRING_DATASOURCE_URL
+              Value: jdbc:mysql://127.0.0.1:3306/todo_list
+            - Name: SPRING_DATASOURCE_USERNAME
+              Value: todo_user
+            - Name: SPRING_DATASOURCE_PASSWORD
+              Value: user@123
+      Tags:
+        - Key: Project
+          Value: !FindInMap [Project, Name, Value]
+  
+  # Create task definition for three tier app api gateway
+  GatewayTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Join ["-", [!FindInMap [Project, Name, Value], "gateway-taskdef"]]
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: "1 vCPU"
+      Memory: "2 GB"
+      TaskRoleArn: !Ref ECSTaskRole
+      ExecutionRoleArn: !Ref ECSTaskRole
+      RuntimePlatform:
+        CpuArchitecture: X86_64
+        OperatingSystemFamily: LINUX
+      ContainerDefinitions:
+        - Name: three-tier-gateway
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${GatewayRepository}"
+          Essential: true
+          PortMappings:
+            - ContainerPort: 80
+              HostPort: 80
+              Protocol: tcp
+              Name: gateway-port
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref ThreeTierAppLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: gw
+          Environment:
+            - Name: BACKEND_URL
+              Value: backend:5000
+            - Name: BASIC_AUTH_CREDENTIALS
+              Value: YWRtaW46YWRtaW5AMTIz
+          HealthCheck:
+            Command: ["CMD-SHELL", "curl -f http://localhost/health || exit 1"]
+            Interval: 30
+            Timeout: 5
+            Retries: 3
+            StartPeriod: 30
+      Tags:
+        - Key: Project
+          Value: !FindInMap [Project, Name, Value]
+
+  # Create task definition for three tier app frontend
+  FrontendTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Join ["-", [!FindInMap [Project, Name, Value], "frontend-taskdef"]]
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: "1 vCPU"
+      Memory: "2 GB"
+      TaskRoleArn: !Ref ECSTaskRole
+      ExecutionRoleArn: !Ref ECSTaskRole
+      RuntimePlatform:
+        CpuArchitecture: X86_64
+        OperatingSystemFamily: LINUX
+      ContainerDefinitions:
+        - Name: three-tier-frontend
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${FrontendRepository}"
+          Essential: true
+          PortMappings:
+            - ContainerPort: 80
+              HostPort: 80
+              Protocol: tcp
+              Name: frontend-port
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref ThreeTierAppLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: fr
+      Tags:
+        - Key: Project
+          Value: !FindInMap [Project, Name, Value]
+
+Outputs:
+  APITaskDefinitionId:
+    Description: Frontend load balancer security group
+    Value: !Ref APITaskDefinition
+  GatewayTaskDefinitionId:
+    Description: Gateway load balancer security group
+    Value: !Ref GatewayTaskDefinition
+  FrontendTaskDefinitionId:
+    Description: Gateway load balancer security group
+    Value: !Ref FrontendTaskDefinition

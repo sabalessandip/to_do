@@ -4,9 +4,10 @@ import 'task.dart';
 import 'task_detail.dart';
 
 class ApiService {
-  // static const String baseUrl = 'http://localhost:5000';
-  static const String baseUrl = 'http://localhost:82';
-
+  // static const String baseUrl = 'http://localhost:5000'; // Local
+  static const String baseUrl = 'http://localhost:82'; // Docker compose
+  // static const String baseUrl = 'http://three-tier-app.local/api'; // minikube
+  // static const String baseUrl = ''; // ECS / EKS
   Future<List<Task>> getTasks() async {
     final response = await http.get(Uri.parse('$baseUrl/tasks'));
     if (response.statusCode == 200) {
