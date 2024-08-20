@@ -51,7 +51,7 @@ docker-compose down
 ## Deployment on Amazon ECS
 
 ### Create Infrastructure Using CloudFormation
-NAvigate to ```aws-ecs``` directory to use CloudFormation templates to set up the necessary infrastructure. Wait for each stack to complete before proceeding to the next step.
+Navigate to ```aws-ecs``` directory to use CloudFormation templates to set up the necessary infrastructure. Wait for each stack to complete before proceeding to the next step.
 
 **1. Create VPC**
 
