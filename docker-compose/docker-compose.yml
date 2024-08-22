@@ -3,7 +3,7 @@ services:
   database:
     container_name: database
     build:
-      context: ./database
+      context: ../database
     environment:
       MYSQL_ROOT_PASSWORD: "root@123"
     healthcheck:
@@ -17,7 +17,7 @@ services:
   backend:
     container_name: backend
     build:
-      context: ./backend
+      context: ../backend
     environment:
       SPRING_DATASOURCE_URL: "jdbc:mysql://database:3306/todo_list"
       SPRING_DATASOURCE_USERNAME: "todo_user"
@@ -35,7 +35,7 @@ services:
   apigateway:
     container_name: apigateway
     build:
-      context: ./gateway
+      context: ../gateway
     ports:
       - 82:80
     environment:
@@ -56,7 +56,7 @@ services:
   frontend:
     container_name: frontend
     build:
-      context: ./frontend
+      context: ../frontend
     ports:
       - 81:80
     depends_on:

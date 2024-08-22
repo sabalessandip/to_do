@@ -34,6 +34,8 @@ sh build_all.sh
 ```
 
 **3. Build and Run Docker Containers**
+Navigate to ```docker-compose``` directory,
+
 ```sh
 docker-compose up -d
 ```
