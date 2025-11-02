@@ -1,0 +1,32 @@
+bk:
+  replicaCount: 1
+
+  image:
+    name: to-do-bk
+    pullPolicy: Never
+    tag: latest
+
+  service:
+    type: ClusterIP
+    port: 5000
+    protocol: TCP
+    targetPort: 5000
+
+  resources: {}
+
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 5000
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 5000
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3

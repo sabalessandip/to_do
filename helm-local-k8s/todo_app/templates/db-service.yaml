@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-service
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: three-tier-app-db
+  type: {{ .Values.db.service.type | default "ClusterIP" }}
+  ports:
+    - name: db-service-port
+      protocol: {{ .Values.db.service.protocol | default "TCP" }}
+      port: {{ .Values.db.service.port | default 3306 }}
+      targetPort: {{ .Values.db.service.targetPort | default .Values.db.containerPortName | default 3306 }}

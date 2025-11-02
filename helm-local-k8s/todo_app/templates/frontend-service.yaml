@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: three-tier-app-fr
+  type: {{ .Values.fr.service.type | default "ClusterIP" }}
+  ports:
+  - name: frontend-service-port
+    protocol: {{ .Values.fr.service.protocol | default "TCP" }}
+    port: {{ .Values.fr.service.port | default 80 }}
+    targetPort: {{ .Values.fr.service.targetPort | default .Values.fr.containerPortName | default 80 }}

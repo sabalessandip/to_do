@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: three-tier-app-bk
+  type: {{ .Values.bk.service.type | default "ClusterIP" }}
+  ports:
+  - name: bk-service-port
+    protocol: {{ .Values.bk.service.protocol | default "TCP" }}
+    port: {{ .Values.bk.service.port | default 5000 }}
+    targetPort: {{ .Values.bk.service.targetPort | default .Values.bk.containerPortName | default 5000 }}

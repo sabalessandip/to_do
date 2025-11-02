@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-deployment
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: three-tier-app-db
+spec:
+  selector:
+    matchLabels:
+      app: three-tier-app-db
+  replicas: {{ .Values.db.replicaCount }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: three-tier-app-db
+    spec:
+      containers:
+        - name: three-tier-app-database
+          image: "{{ .Values.db.image.name }}:{{ .Values.db.image.tag }}"
+          imagePullPolicy: "{{ .Values.db.image.pullPolicy }}"
+{{- if .Values.db.resources }}
+          resources:
+{{ toYaml .Values.db.resources | indent 12 }}
+{{- end }}
+          livenessProbe:
+{{ toYaml .Values.db.livenessProbe | indent 12 }}
+          readinessProbe:
+{{ toYaml .Values.db.readinessProbe | indent 12 }}
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: three-tier-app-secretes
+                  key: db-root-password
+          ports:
+            - containerPort: 3306
+              name: db-port
+      restartPolicy: Always

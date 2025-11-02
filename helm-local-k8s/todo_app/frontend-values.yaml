@@ -1,0 +1,15 @@
+fr:
+  replicaCount: 1
+
+  image:
+    name: to-do-fr
+    pullPolicy: Never
+    tag: latest
+  
+  service:
+    type: ClusterIP
+    port: 80
+    protocol: TCP
+    targetPort: 80
+
+  resources: {}

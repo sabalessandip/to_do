@@ -1,6 +1,8 @@
 #!/bin/bash
 
 # Create database image
+cd ..
+
 cd database
 docker build -t to-do-db .
 
